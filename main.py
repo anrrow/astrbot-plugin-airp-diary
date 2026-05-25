@@ -396,49 +396,82 @@ class AirpDiary(Star):
         """调试：查看当前会话插件读到了什么人格信息"""
         try:
             umo = event.unified_msg_origin
-            lines = ["🔍 AIRP 日记插件 - 当前会话人格诊断", ""]
-            lines.append(f"会话标识 (umo): {umo}")
+            lines = ["🔍 AIRP 日记插件 - 深度诊断", ""]
+            lines.append(f"会话标识: {umo}")
             lines.append("")
 
-            # 1. 看会话管理器
             conv_mgr = getattr(self.context, "conversation_manager", None)
-            lines.append(f"conversation_manager 可用: {conv_mgr is not None}")
+            persona_mgr = getattr(self.context, "persona_manager", None)
 
-            cid = None
-            conv = None
+            lines.append(f"conversation_manager: {conv_mgr is not None}")
+            lines.append(f"persona_manager: {persona_mgr is not None}")
+
+            persona_id = None
             if conv_mgr:
                 try:
                     cid = await conv_mgr.get_curr_conversation_id(umo)
-                    lines.append(f"当前会话ID (cid): {cid}")
-                except Exception as e:
-                    lines.append(f"获取 cid 失败: {e}")
-
-                if cid:
-                    try:
+                    if cid:
                         conv = await conv_mgr.get_conversation(umo, cid)
-                        lines.append(f"会话对象: {conv is not None}")
                         if conv:
-                            pid = getattr(conv, "persona_id", None)
-                            lines.append(f"会话绑定的 persona_id: {pid!r}")
-                    except Exception as e:
-                        lines.append(f"获取会话对象失败: {e}")
+                            persona_id = getattr(conv, "persona_id", None)
+                            lines.append(f"会话绑定 persona_id: {persona_id!r}")
+                except Exception as e:
+                    lines.append(f"读取会话失败: {e}")
 
             lines.append("")
+            lines.append("=" * 30)
+            lines.append("【persona 对象深度探测】")
+            lines.append("=" * 30)
 
-            # 2. 调用真正的 _resolve_persona
-            name, profile = await self._resolve_persona(event)
-            lines.append(f"插件最终解析到的角色名: {name!r}")
-            lines.append(f"人格 prompt 长度: {len(profile)} 字符")
-            lines.append("")
-            lines.append("人格 prompt 前 300 字符预览：")
-            lines.append("-" * 30)
-            if profile:
-                lines.append(profile[:300])
-                if len(profile) > 300:
-                    lines.append("...(已截断)")
-            else:
-                lines.append("⚠️ 空！插件没读到任何人格内容！")
-            lines.append("-" * 30)
+            if persona_mgr and persona_id:
+                # 尝试 get_persona
+                try:
+                    persona = persona_mgr.get_persona(persona_id)
+                    lines.append(f"get_persona({persona_id!r}) 返回: {persona is not None}")
+                    if persona is not None:
+                        lines.append(f"对象类型: {type(persona).__name__}")
+                        lines.append("")
+                        lines.append("所有可见属性:")
+                        # 列出所有非下划线开头的属性
+                        for attr in dir(persona):
+                            if attr.startswith("_"):
+                                continue
+                            try:
+                                val = getattr(persona, attr)
+                                if callable(val):
+                                    continue
+                                val_str = repr(val)
+                                if len(val_str) > 200:
+                                    val_str = val_str[:200] + "..."
+                                lines.append(f"  • {attr} = {val_str}")
+                            except Exception as e:
+                                lines.append(f"  • {attr} = <读取失败: {e}>")
+                except Exception as e:
+                    lines.append(f"get_persona 抛异常: {type(e).__name__}: {e}")
+
+                # 尝试 get_all_personas
+                lines.append("")
+                lines.append("=" * 30)
+                lines.append("【所有人格列表】")
+                try:
+                    all_personas = persona_mgr.get_all_personas()
+                    lines.append(f"共 {len(all_personas)} 个人格")
+                    for p in all_personas[:5]:
+                        pid = getattr(p, "persona_id", "?")
+                        sp = getattr(p, "system_prompt", "") or ""
+                        lines.append(f"  - {pid!r} (system_prompt 长度: {len(sp)})")
+                except Exception as e:
+                    lines.append(f"get_all_personas 失败: {e}")
+
+                # 尝试 v3 兼容方法
+                lines.append("")
+                lines.append("=" * 30)
+                lines.append("【default_persona_v3】")
+                try:
+                    pv3 = persona_mgr.get_default_persona_v3(umo=umo)
+                    lines.append(f"返回: {pv3!r}"[:500])
+                except Exception as e:
+                    lines.append(f"失败: {e}")
 
             yield event.plain_result("\n".join(lines))
 
