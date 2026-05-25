@@ -89,13 +89,17 @@ class AirpDiary(Star):
 
                     if persona_id:
                         try:
-                            persona = persona_mgr.get_persona(persona_id)
+                            persona = await persona_mgr.get_persona(persona_id)
                             if persona:
                                 name = (
                                     getattr(persona, "persona_id", None)
                                     or persona_id
                                 )
-                                prompt = getattr(persona, "system_prompt", "") or ""
+                                prompt = (
+                                    getattr(persona, "system_prompt", None)
+                                    or getattr(persona, "prompt", None)
+                                    or ""
+                                )
                                 return str(name), str(prompt)
                         except Exception as e:
                             logger.debug(
@@ -108,7 +112,7 @@ class AirpDiary(Star):
         try:
             persona_mgr = getattr(self.context, "persona_manager", None)
             if persona_mgr and hasattr(persona_mgr, "get_default_persona_v3"):
-                persona = persona_mgr.get_default_persona_v3(umo=umo)
+                persona = await persona_mgr.get_default_persona_v3(umo=umo)
                 if persona and isinstance(persona, dict):
                     name = persona.get("name") or "未命名角色"
                     prompt = persona.get("prompt", "") or ""
@@ -426,13 +430,12 @@ class AirpDiary(Star):
             if persona_mgr and persona_id:
                 # 尝试 get_persona
                 try:
-                    persona = persona_mgr.get_persona(persona_id)
+                    persona = await persona_mgr.get_persona(persona_id)
                     lines.append(f"get_persona({persona_id!r}) 返回: {persona is not None}")
                     if persona is not None:
                         lines.append(f"对象类型: {type(persona).__name__}")
                         lines.append("")
                         lines.append("所有可见属性:")
-                        # 列出所有非下划线开头的属性
                         for attr in dir(persona):
                             if attr.startswith("_"):
                                 continue
@@ -454,12 +457,16 @@ class AirpDiary(Star):
                 lines.append("=" * 30)
                 lines.append("【所有人格列表】")
                 try:
-                    all_personas = persona_mgr.get_all_personas()
+                    all_personas = await persona_mgr.get_all_personas()
                     lines.append(f"共 {len(all_personas)} 个人格")
                     for p in all_personas[:5]:
                         pid = getattr(p, "persona_id", "?")
-                        sp = getattr(p, "system_prompt", "") or ""
-                        lines.append(f"  - {pid!r} (system_prompt 长度: {len(sp)})")
+                        sp = (
+                            getattr(p, "system_prompt", None)
+                            or getattr(p, "prompt", None)
+                            or ""
+                        )
+                        lines.append(f"  - {pid!r} (prompt 长度: {len(sp)})")
                 except Exception as e:
                     lines.append(f"get_all_personas 失败: {e}")
 
@@ -468,7 +475,7 @@ class AirpDiary(Star):
                 lines.append("=" * 30)
                 lines.append("【default_persona_v3】")
                 try:
-                    pv3 = persona_mgr.get_default_persona_v3(umo=umo)
+                    pv3 = await persona_mgr.get_default_persona_v3(umo=umo)
                     lines.append(f"返回: {pv3!r}"[:500])
                 except Exception as e:
                     lines.append(f"失败: {e}")
