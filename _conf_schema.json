@@ -1,0 +1,58 @@
+{
+  "character_name": {
+    "description": "角色名称（可选）",
+    "type": "string",
+    "hint": "如果不填，将自动从 AstrBot 人格系统读取当前默认人格的名字",
+    "default": ""
+  },
+  "default_city": {
+    "description": "常驻地点",
+    "type": "string",
+    "hint": "用于天气 API 查询的城市，默认东京",
+    "default": "东京"
+  },
+  "use_weather_api": {
+    "description": "使用天气 API",
+    "type": "bool",
+    "hint": "启用后会根据下面的提供商和 API Key 自动获取天气；关闭时使用季节性默认天气",
+    "default": false
+  },
+  "weather_provider": {
+    "description": "天气数据源",
+    "type": "string",
+    "options": ["openweather", "heweather", "caiyun"],
+    "hint": "天气 API 提供商：openweather（OpenWeather）、heweather（和风天气）、caiyun（彩云天气）",
+    "default": "openweather"
+  },
+  "weather_api_key": {
+    "description": "天气 API 密钥",
+    "type": "string",
+    "hint": "OpenWeather: https://openweathermap.org/  和风天气: https://www.qweather.com/",
+    "default": ""
+  },
+  "render_mode": {
+    "description": "渲染模式",
+    "type": "string",
+    "options": ["html", "markdown"],
+    "hint": "html 支持完整富文本格式，markdown 兼容性更强",
+    "default": "html"
+  },
+  "enable_state_cache": {
+    "description": "启用状态缓存",
+    "type": "bool",
+    "hint": "记录角色的情绪、能量等状态（推荐启用）",
+    "default": true
+  },
+  "enable_diary_history": {
+    "description": "启用日记历史",
+    "type": "bool",
+    "hint": "自动保存生成的日记，支持查看历史日记",
+    "default": true
+  },
+  "enable_action_injection": {
+    "description": "启用小动作注入",
+    "type": "bool",
+    "hint": "在日记中随机加入小动作（揉眼睛、叹气等）增加人味",
+    "default": true
+  }
+}

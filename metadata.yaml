@@ -1,0 +1,5 @@
+name: airp_diary
+desc: AIRP角色日记系统 - 与AstrBot人格系统深度集成的角色日记插件，支持查看日记、心声、足迹和历史回顾
+version: 2.1.0
+author: anrrow2002-ctrl
+repo: https://github.com/anrrow/astrbot-plugin-airp-diary

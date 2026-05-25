@@ -1,0 +1,215 @@
+/**
+ * AIRP 日记插件样式表
+ * 
+ * 用于网页渲染日记内容时的样式定义
+ * 支持各种文本格式和装饰效果
+ */
+
+/* 删除线样式 */
+.strikethrough {
+  text-decoration: line-through;
+  color: #999;
+  opacity: 0.8;
+}
+
+/* 高亮样式 */
+.highlight {
+  background: #fff59d;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+/* 下划线样式 */
+.underline {
+  border-bottom: 2px dashed #ff69b4;
+  padding-bottom: 2px;
+}
+
+/* 强调样式 */
+.emphasis {
+  font-weight: bold;
+  color: #ff1493;
+}
+
+/* 手写体样式 */
+.handwritten {
+  font-family: "Brush Script MT", cursive;
+  font-size: 1.05em;
+  color: #333;
+}
+
+/* 混乱体样式（斜体 + 轻微旋转） */
+.messy {
+  font-family: cursive;
+  font-style: italic;
+  transform: skewY(-2deg);
+  opacity: 0.9;
+}
+
+/* 涂黑样式 */
+.censored {
+  background: #000;
+  color: #000;
+  border-radius: 2px;
+  padding: 2px 4px;
+  user-select: none;
+  cursor: not-allowed;
+}
+
+/* 日记容器 */
+.diary-container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #fafaf0;
+  border-left: 4px solid #ff69b4;
+  font-family: "Microsoft YaHei", 微软雅黑, sans-serif;
+  line-height: 1.8;
+}
+
+/* 日记标题 */
+.diary-header {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+/* 日期行 */
+.diary-date {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+/* 天气行 */
+.diary-weather {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 16px;
+}
+
+/* 日记内容 */
+.diary-content {
+  font-size: 15px;
+  color: #333;
+}
+
+/* 日记内容中的段落 */
+.diary-content p {
+  margin: 12px 0;
+  text-align: justify;
+}
+
+/* 日记内容中最后一个段落 */
+.diary-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* 心声容器 */
+.inner-voice-container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #f5f5f5;
+  border-left: 4px solid #4169e1;
+  font-family: "Microsoft YaHei", 微软雅黑, sans-serif;
+  line-height: 1.8;
+  border-radius: 4px;
+}
+
+/* 足迹容器 */
+.footprint-container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #fffacd;
+  border-left: 4px solid #daa520;
+  font-family: "Microsoft YaHei", 微软雅黑, sans-serif;
+  line-height: 1.8;
+}
+
+/* 足迹列表项 */
+.footprint-item {
+  margin: 16px 0;
+  padding: 12px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #daa520;
+}
+
+.footprint-place {
+  font-weight: bold;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.footprint-details {
+  font-size: 14px;
+  color: #666;
+}
+
+.footprint-details li {
+  margin: 4px 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+  .diary-container,
+  .inner-voice-container,
+  .footprint-container {
+    margin: 10px;
+    padding: 15px;
+  }
+
+  .diary-content p,
+  .footprint-item {
+    font-size: 14px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .diary-container {
+    background: #2a2a2a;
+    color: #e0e0e0;
+    border-left-color: #ff69b4;
+  }
+
+  .diary-content {
+    color: #e0e0e0;
+  }
+
+  .diary-date,
+  .diary-weather {
+    color: #a0a0a0;
+  }
+
+  .strikethrough {
+    color: #666;
+  }
+
+  .inner-voice-container {
+    background: #2a2a2a;
+    color: #e0e0e0;
+  }
+
+  .footprint-container {
+    background: #2a2a2a;
+    color: #e0e0e0;
+  }
+
+  .footprint-item {
+    background: #3a3a3a;
+    border-color: #daa520;
+  }
+
+  .footprint-place {
+    color: #e0e0e0;
+  }
+
+  .footprint-details {
+    color: #b0b0b0;
+  }
+}

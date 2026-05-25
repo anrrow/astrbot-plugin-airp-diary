@@ -1,0 +1,39 @@
+{
+  "comment": "这是AstrBot AIRP Diary Plugin的配置示例",
+  "comment2": "将此配置合并到AstrBot的主配置文件中",
+  
+  "airp-diary": {
+    "comment": "=== 说明 ===",
+    "comment_integration": "插件会自动从AstrBot的人格系统读取角色名和人格设定",
+    "comment_optional": "下面的配置都是可选的，可以覆盖AstrBot的设定",
+    
+    "character_name": "",
+    "comment_character_name": "留空则自动使用AstrBot的人格系统中的角色名",
+    
+    "comment3": "=== 基础配置 ===",
+    "default_city": "东京",
+    "render_mode": "html",
+    
+    "comment4": "=== 功能开关 ===",
+    "enable_state_cache": true,
+    "enable_diary_history": true,
+    "enable_action_injection": true,
+    
+    "comment5": "=== 天气API配置（可选）===",
+    "use_weather_api": false,
+    "weather_provider": "openweather",
+    "comment6": "从 https://openweathermap.org/api 获取免费API密钥",
+    "weather_api_key": null,
+    
+    "comment7": "=== 情绪类型 ===",
+    "mood_types": [
+      "开心",
+      "烦躁",
+      "疲惫",
+      "平静",
+      "期待",
+      "忧伤",
+      "麻木"
+    ]
+  }
+}
