@@ -496,8 +496,8 @@ data/角色名/
 ## 获取帮助
 
 - 📖 完整文档：[README.md](README.md)
-- 🐛 报告问题：[GitHub Issues](https://github.com/anrrow2002-ctrl/astrbot-plugin-airp-diary/issues)
-- 💬 讨论交流：[GitHub Discussions](https://github.com/anrrow2002-ctrl/astrbot-plugin-airp-diary/discussions)
+- 🐛 报告问题：[GitHub Issues](https://github.com/anrrow/astrbot-plugin-airp-diary/issues)
+- 💬 讨论交流：[GitHub Discussions](https://github.com/anrrow/astrbot-plugin-airp-diary/discussions)
 
 ---
 

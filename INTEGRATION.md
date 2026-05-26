@@ -58,7 +58,7 @@
 
 ```bash
 cd /path/to/AstrBot/plugins
-git clone https://github.com/anrrow2002-ctrl/astrbot-plugin-airp-diary.git
+git clone https://github.com/anrrow/astrbot-plugin-airp-diary.git
 ```
 
 ### 步骤3：重启AstrBot
@@ -182,7 +182,7 @@ A: 生成日记时，如果日记的内容与你的AstrBot人格设定相符，�
 ## 🔗 相关链接
 
 - [AstrBot 官方文档](https://github.com/astrbot/astrbot)
-- [AIRP Diary 项目](https://github.com/anrrow2002-ctrl/astrbot-plugin-airp-diary)
+- [AIRP Diary 项目](https://github.com/anrrow/astrbot-plugin-airp-diary)
 - [使用指南](GUIDE.md)
 - [README](README.md)
 

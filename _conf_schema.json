@@ -8,26 +8,26 @@
   "use_weather_api": {
     "description": "使用真实天气 API",
     "type": "bool",
-    "hint": "启用后会用下方 API 抓真实天气；关闭时由 LLM 根据角色处境自行虚构（推荐关闭，省钱省事）",
+    "hint": "启用后会用下方天气源抓真实天气；关闭时由 LLM 根据角色处境自行虚构。推荐启用 + 用免费的 open_meteo",
     "default": false
   },
   "default_city": {
     "description": "常驻城市（仅启用真实天气时生效）",
     "type": "string",
-    "hint": "用于天气 API 查询的城市",
-    "default": "东京"
+    "hint": "用于天气查询的城市，中英文都行",
+    "default": "上海"
   },
   "weather_provider": {
     "description": "天气数据源（仅启用真实天气时生效）",
     "type": "string",
-    "options": ["openweather", "heweather", "caiyun"],
-    "hint": "openweather / 和风天气 / 彩云天气",
-    "default": "openweather"
+    "options": ["open_meteo", "wttr", "openweather", "heweather", "caiyun"],
+    "hint": "open_meteo 完全免费免注册（推荐✨）/ wttr 完全免费免注册（备选）/ 其余三家需要 API Key",
+    "default": "open_meteo"
   },
   "weather_api_key": {
-    "description": "天气 API 密钥（仅启用真实天气时生效）",
+    "description": "天气 API 密钥（仅 openweather/heweather/caiyun 需要）",
     "type": "string",
-    "hint": "OpenWeather: https://openweathermap.org/  和风天气: https://www.qweather.com/",
+    "hint": "选 open_meteo 或 wttr 可以留空。OpenWeather: https://openweathermap.org/  和风天气: https://dev.qweather.com/",
     "default": ""
   },
   "render_mode": {

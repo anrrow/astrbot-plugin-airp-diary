@@ -158,4 +158,4 @@ airp_diary/
 - 📖 [README](README.md) - 项目文档
 - 📚 [使用指南](GUIDE.md) - 详细教程
 - 🔗 [集成说明](INTEGRATION.md) - AstrBot集成
-- 🐛 [Issue](https://github.com/anrrow2002-ctrl/astrbot-plugin-airp-diary/issues) - 报告问题
+- 🐛 [Issue](https://github.com/anrrow/astrbot-plugin-airp-diary/issues) - 报告问题

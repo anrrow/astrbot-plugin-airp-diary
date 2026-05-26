@@ -168,7 +168,7 @@ __下划线__
 
 ```bash
 cd /path/to/AstrBot/plugins
-git clone https://github.com/anrrow2002-ctrl/astrbot-plugin-airp-diary.git
+git clone https://github.com/anrrow/astrbot-plugin-airp-diary.git
 cd astrbot-plugin-airp-diary
 ```
 
@@ -512,8 +512,8 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ## 📧 联系方式
 
-- GitHub: [@anrrow2002-ctrl](https://github.com/anrrow2002-ctrl)
-- Issues: [提交问题](https://github.com/anrrow2002-ctrl/astrbot-plugin-airp-diary/issues)
+- GitHub: [@anrrow](https://github.com/anrrow)
+- Issues: [提交问题](https://github.com/anrrow/astrbot-plugin-airp-diary/issues)
 
 ---
 
