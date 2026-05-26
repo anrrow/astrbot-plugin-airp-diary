@@ -134,7 +134,13 @@ class AirpDiary(Star):
         return CharacterMemory(safe_name, base_dir="data/airp_diary")
 
     async def _get_weather(self) -> str:
-        """获取今天的天气"""
+        """
+        获取今天的天气
+
+        Returns:
+            - 启用了真实天气 API：返回真实天气字符串
+            - 未启用 API：返回空字符串，让 LLM 在生成日记时根据角色处境自己虚构
+        """
         try:
             if self.config.get("use_weather_api", False):
                 city = self.config.get("default_city", "东京")
@@ -143,8 +149,8 @@ class AirpDiary(Star):
                 if weather:
                     return weather
         except Exception as e:
-            logger.warning(f"[airp_diary] 获取天气失败: {e}")
-        return WeatherAPI._default_weather()
+            logger.warning(f"[airp_diary] 获取天气失败，改由LLM自行虚构: {e}")
+        return ""
 
     async def _call_llm(self, prompt: str, event: AstrMessageEvent) -> str:
         """调用 LLM 生成内容"""
@@ -167,6 +173,23 @@ class AirpDiary(Star):
             return self.thinking_adapter.get_mode_prompt_suffix()
         return ""
 
+    def _get_prompt(self, name: str) -> str:
+        """
+        获取 prompt：优先使用用户在 WebUI 配置里自定义的，留空则回退到插件内置 .txt 文件
+
+        Args:
+            name: prompt 名称（system / diary_context / voice / footprint / history / diary_offline）
+
+        Returns:
+            prompt 内容字符串
+        """
+        config_key = f"prompt_{name}"
+        custom = (self.config.get(config_key) or "").strip()
+        if custom:
+            logger.debug(f"[airp_diary] 使用用户自定义的 {name} prompt")
+            return custom
+        return load_prompt(name)
+
     def _build_character_info(self, name: str, profile: str) -> str:
         """拼接角色信息块"""
         if profile.strip():
@@ -188,11 +211,11 @@ class AirpDiary(Star):
             if self.thinking_adapter and self.thinking_adapter.is_enabled():
                 use_offline = self.thinking_adapter.should_use_novel_format()
 
-            system_prompt = load_prompt("system")
-            diary_context_prompt = load_prompt("diary_context")
+            system_prompt = self._get_prompt("system")
+            diary_context_prompt = self._get_prompt("diary_context")
             if use_offline:
                 try:
-                    diary_template = load_prompt("diary_offline")
+                    diary_template = self._get_prompt("diary_offline")
                 except FileNotFoundError:
                     diary_template = system_prompt
             else:
@@ -210,11 +233,19 @@ class AirpDiary(Star):
                 system_prompt=diary_template,
             )
 
+            if weather:
+                weather_line = f"今天的天气：{weather}"
+            else:
+                weather_line = (
+                    "今天的天气：（请根据角色当前所在地点、季节、心情，"
+                    "在日记里合理虚构一个天气，格式 emoji + 天气描述 + 温度）"
+                )
+
             full_prompt = (
                 f"{character_info}\n\n"
                 f"{context_prompt}\n\n"
                 f"今天的日期是：{today_cn()}\n"
-                f"今天的天气：{weather}\n\n"
+                f"{weather_line}\n\n"
                 f"{self._get_mode_hint()}\n\n"
                 f"请以上述角色的视角和说话习惯，"
                 f"严格按照[日记]格式，生成 ta 今天的日记。"
@@ -246,7 +277,7 @@ class AirpDiary(Star):
             name, profile = await self._resolve_persona(event)
             memory = self._get_memory(name)
             state = memory.load_state()
-            voice_prompt = load_prompt("voice")
+            voice_prompt = self._get_prompt("voice")
             character_info = self._build_character_info(name, profile)
 
             last_diary = memory.load_diary()
@@ -280,7 +311,7 @@ class AirpDiary(Star):
             name, profile = await self._resolve_persona(event)
             memory = self._get_memory(name)
             state = memory.load_state()
-            footprint_prompt = load_prompt("footprint")
+            footprint_prompt = self._get_prompt("footprint")
             character_info = self._build_character_info(name, profile)
 
             full_prompt = (
@@ -369,7 +400,7 @@ class AirpDiary(Star):
                 target_date = (
                     datetime.now() - timedelta(days=days_ago)
                 ).strftime("%Y-%m-%d")
-                history_prompt = load_prompt("history")
+                history_prompt = self._get_prompt("history")
                 character_info = self._build_character_info(name, profile)
 
                 full_prompt = (

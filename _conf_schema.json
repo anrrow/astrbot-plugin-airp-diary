@@ -2,30 +2,30 @@
   "character_name": {
     "description": "角色名称（可选）",
     "type": "string",
-    "hint": "如果不填，将自动从 AstrBot 人格系统读取当前默认人格的名字",
+    "hint": "兜底用。留空时插件会自动跟随当前会话使用的 AstrBot 人格",
     "default": ""
   },
-  "default_city": {
-    "description": "常驻地点",
-    "type": "string",
-    "hint": "用于天气 API 查询的城市，默认东京",
-    "default": "东京"
-  },
   "use_weather_api": {
-    "description": "使用天气 API",
+    "description": "使用真实天气 API",
     "type": "bool",
-    "hint": "启用后会根据下面的提供商和 API Key 自动获取天气；关闭时使用季节性默认天气",
+    "hint": "启用后会用下方 API 抓真实天气；关闭时由 LLM 根据角色处境自行虚构（推荐关闭，省钱省事）",
     "default": false
   },
+  "default_city": {
+    "description": "常驻城市（仅启用真实天气时生效）",
+    "type": "string",
+    "hint": "用于天气 API 查询的城市",
+    "default": "东京"
+  },
   "weather_provider": {
-    "description": "天气数据源",
+    "description": "天气数据源（仅启用真实天气时生效）",
     "type": "string",
     "options": ["openweather", "heweather", "caiyun"],
-    "hint": "天气 API 提供商：openweather（OpenWeather）、heweather（和风天气）、caiyun（彩云天气）",
+    "hint": "openweather / 和风天气 / 彩云天气",
     "default": "openweather"
   },
   "weather_api_key": {
-    "description": "天气 API 密钥",
+    "description": "天气 API 密钥（仅启用真实天气时生效）",
     "type": "string",
     "hint": "OpenWeather: https://openweathermap.org/  和风天气: https://www.qweather.com/",
     "default": ""
@@ -34,14 +34,8 @@
     "description": "渲染模式",
     "type": "string",
     "options": ["html", "markdown"],
-    "hint": "html 支持完整富文本格式，markdown 兼容性更强",
+    "hint": "html 支持富文本，markdown 兼容性更强",
     "default": "html"
-  },
-  "enable_state_cache": {
-    "description": "启用状态缓存",
-    "type": "bool",
-    "hint": "记录角色的情绪、能量等状态（推荐启用）",
-    "default": true
   },
   "enable_diary_history": {
     "description": "启用日记历史",
@@ -54,5 +48,35 @@
     "type": "bool",
     "hint": "在日记中随机加入小动作（揉眼睛、叹气等）增加人味",
     "default": true
+  },
+  "prompt_system": {
+    "description": "【自定义】日记 - 主提示词",
+    "type": "text",
+    "hint": "查看日记 时使用的核心提示词。留空使用插件内置版本。可以在此基础上加你自己的写作规范、禁词、风格偏好",
+    "default": ""
+  },
+  "prompt_diary_context": {
+    "description": "【自定义】日记 - 状态上下文提示词",
+    "type": "text",
+    "hint": "拼接角色当前状态（情绪、能量、地点等）的模板。必须包含 {mood} {energy} {last_place} {recent_event} {unfinished_thought} {system_prompt} 这几个占位符。留空使用内置版本",
+    "default": ""
+  },
+  "prompt_voice": {
+    "description": "【自定义】查看心声 - 提示词",
+    "type": "text",
+    "hint": "生成角色内心独白时使用。留空使用插件内置版本",
+    "default": ""
+  },
+  "prompt_footprint": {
+    "description": "【自定义】查看足迹 - 提示词",
+    "type": "text",
+    "hint": "生成角色最近去过的地方时使用。留空使用插件内置版本",
+    "default": ""
+  },
+  "prompt_history": {
+    "description": "【自定义】历史日记 - 提示词",
+    "type": "text",
+    "hint": "查看昨天/上周/N天前 日记时使用。必须包含 {date_desc} 占位符。留空使用内置版本",
+    "default": ""
   }
 }
