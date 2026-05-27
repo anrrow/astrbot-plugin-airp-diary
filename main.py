@@ -127,6 +127,100 @@ class AirpDiary(Star):
 
         return "未命名角色", ""
 
+    async def _get_conversation_history(
+        self, event: AstrMessageEvent, max_messages: int = 30
+    ) -> str:
+        """
+        获取当前会话最近的对话历史
+
+        Args:
+            event: 消息事件
+            max_messages: 最多取多少条历史消息
+
+        Returns:
+            格式化后的对话历史字符串，用于注入 prompt
+        """
+        umo = event.unified_msg_origin
+        try:
+            conv_mgr = getattr(self.context, "conversation_manager", None)
+            if not conv_mgr:
+                return ""
+
+            cid = await conv_mgr.get_curr_conversation_id(umo)
+            if not cid:
+                return ""
+
+            conv = await conv_mgr.get_conversation(umo, cid)
+            if not conv:
+                return ""
+
+            # 兜底多个字段名 (不同 astrbot 版本字段名可能不同)
+            raw_history = (
+                getattr(conv, "history", None)
+                or getattr(conv, "messages", None)
+                or getattr(conv, "chat_history", None)
+                or ""
+            )
+
+            # history 可能是 JSON 字符串，也可能是 list
+            history_list = None
+            if isinstance(raw_history, str):
+                if not raw_history.strip():
+                    return ""
+                try:
+                    import json
+                    history_list = json.loads(raw_history)
+                except Exception:
+                    return raw_history[-3000:]  # 解析失败就当文本截断返回
+            elif isinstance(raw_history, list):
+                history_list = raw_history
+
+            if not history_list:
+                return ""
+
+            # 取最近 max_messages 条
+            recent = history_list[-max_messages:]
+            lines = []
+            for msg in recent:
+                if not isinstance(msg, dict):
+                    continue
+                role = msg.get("role", "?")
+                content = msg.get("content", "")
+
+                # 多模态消息（list of parts）
+                if isinstance(content, list):
+                    parts = []
+                    for c in content:
+                        if isinstance(c, dict):
+                            t = c.get("text") or c.get("content")
+                            if t:
+                                parts.append(str(t))
+                        elif isinstance(c, str):
+                            parts.append(c)
+                    content = " ".join(parts)
+
+                content = str(content).strip()
+                if not content:
+                    continue
+
+                # 截断过长的单条消息
+                if len(content) > 400:
+                    content = content[:400] + "..."
+
+                role_name = {
+                    "user": "用户",
+                    "assistant": "角色",
+                    "system": "[系统]",
+                }.get(role, role)
+
+                lines.append(f"{role_name}: {content}")
+
+            return "\n".join(lines)
+
+        except Exception as e:
+            logger.warning(f"[airp_diary] 读取对话历史失败: {e}")
+            return ""
+
     def _get_memory(self, character_name: str) -> CharacterMemory:
         """根据角色名获取该角色独立的 memory 实例"""
         # 防止文件系统不喜欢的字符出现在路径
@@ -223,6 +317,7 @@ class AirpDiary(Star):
 
             weather = await self._get_weather()
             character_info = self._build_character_info(name, profile)
+            chat_history = await self._get_conversation_history(event, max_messages=30)
 
             context_prompt = diary_context_prompt.format(
                 mood=state.get("mood", "平静"),
@@ -241,15 +336,26 @@ class AirpDiary(Star):
                     "在日记里合理虚构一个天气，格式 emoji + 天气描述 + 温度）"
                 )
 
+            history_block = ""
+            if chat_history:
+                history_block = (
+                    f"\n\n【最近的对话记录（这是今天/最近真实发生的事，日记必须围绕这些内容展开）】\n"
+                    f"{chat_history}\n"
+                    f"【对话记录结束】\n"
+                )
+
             full_prompt = (
-                f"{character_info}\n\n"
+                f"{character_info}\n"
+                f"{history_block}\n"
                 f"{context_prompt}\n\n"
                 f"今天的日期是：{today_cn()}\n"
                 f"{weather_line}\n\n"
                 f"{self._get_mode_hint()}\n\n"
                 f"请以上述角色的视角和说话习惯，"
                 f"严格按照[日记]格式，生成 ta 今天的日记。"
-                f"内容必须贴合角色设定，禁止脱离人设。"
+                f"内容必须贴合角色设定且必须围绕上面【最近的对话记录】里实际发生的事来写——"
+                f"是谁说了什么、做了什么、感受到了什么。不要凭空虚构对话里没发生的事。"
+                f"如果没有对话记录，再按角色当前状态合理生成日常内容。"
             )
 
             result = await self._call_llm(full_prompt, event)
@@ -279,20 +385,31 @@ class AirpDiary(Star):
             state = memory.load_state()
             voice_prompt = self._get_prompt("voice")
             character_info = self._build_character_info(name, profile)
+            chat_history = await self._get_conversation_history(event, max_messages=20)
 
             last_diary = memory.load_diary()
             diary_context = (
                 f"\n最近的日记片段：\n{last_diary}" if last_diary else ""
             )
 
+            history_block = ""
+            if chat_history:
+                history_block = (
+                    f"\n【最近的对话记录（这是 ta 实际经历的事）】\n"
+                    f"{chat_history}\n"
+                    f"【对话记录结束】\n"
+                )
+
             full_prompt = (
-                f"{character_info}\n\n"
+                f"{character_info}\n"
+                f"{history_block}\n"
                 f"当前状态：{state.get('mood', '平静')}，能量值{state.get('energy', 75)}/100\n"
                 f"{diary_context}\n\n"
                 f"{voice_prompt}\n\n"
                 f"{self._get_mode_hint()}\n\n"
-                f"请以上述角色的视角、语气、习惯，生成 ta 此刻的心声。"
-                f"内容必须贴合角色设定。"
+                f"请以上述角色的视角、语气、习惯，生成 ta 此刻的内心独白。"
+                f"独白必须围绕上面对话记录里实际发生的事——是 ta 没说出口的话、藏在心里的想法、"
+                f"对刚才那段对话的真实感受。不要脱离对话内容空谈。"
             )
 
             result = await self._call_llm(full_prompt, event)
@@ -313,13 +430,24 @@ class AirpDiary(Star):
             state = memory.load_state()
             footprint_prompt = self._get_prompt("footprint")
             character_info = self._build_character_info(name, profile)
+            chat_history = await self._get_conversation_history(event, max_messages=20)
+
+            history_block = ""
+            if chat_history:
+                history_block = (
+                    f"\n【最近的对话记录（从中提炼 ta 可能去过的地方）】\n"
+                    f"{chat_history}\n"
+                    f"【对话记录结束】\n"
+                )
 
             full_prompt = (
-                f"{character_info}\n\n"
+                f"{character_info}\n"
+                f"{history_block}\n"
                 f"最近常去的地点：{state.get('favorite_places', '家、咖啡馆')}\n"
                 f"{footprint_prompt}\n\n"
                 f"请以上述角色的视角，生成 ta 最近的足迹。"
-                f"内容必须贴合角色设定。"
+                f"如果对话记录里提到了具体地点或事件，请优先把这些地点写进去；"
+                f"其余地点用角色生活范围内合理的场所补充。"
             )
 
             result = await self._call_llm(full_prompt, event)
@@ -516,3 +644,55 @@ class AirpDiary(Star):
         except Exception as e:
             logger.error(f"[airp_diary] 调试失败: {e}", exc_info=True)
             yield event.plain_result(f"❌ 调试失败：{e}")
+
+    @filter.command("airp历史调试")
+    async def debug_history(self, event: AstrMessageEvent):
+        """调试：查看插件能不能读到对话历史"""
+        try:
+            lines = ["🔍 对话历史读取诊断", ""]
+
+            umo = event.unified_msg_origin
+            conv_mgr = getattr(self.context, "conversation_manager", None)
+            if not conv_mgr:
+                yield event.plain_result("❌ 没有 conversation_manager")
+                return
+
+            cid = await conv_mgr.get_curr_conversation_id(umo)
+            lines.append(f"会话ID: {cid}")
+            if not cid:
+                yield event.plain_result("\n".join(lines))
+                return
+
+            conv = await conv_mgr.get_conversation(umo, cid)
+            lines.append(f"会话对象: {conv is not None}")
+            if not conv:
+                yield event.plain_result("\n".join(lines))
+                return
+
+            # 探测可能的字段
+            for field in ("history", "messages", "chat_history"):
+                val = getattr(conv, field, None)
+                if val is None:
+                    lines.append(f"  • {field}: 不存在")
+                    continue
+                t = type(val).__name__
+                if isinstance(val, (list, str)):
+                    lines.append(f"  • {field}: {t}, 长度={len(val)}")
+                else:
+                    lines.append(f"  • {field}: {t}")
+
+            # 实际调用 _get_conversation_history
+            lines.append("")
+            lines.append("=" * 30)
+            lines.append("【插件实际读到的历史（前500字符）】")
+            history = await self._get_conversation_history(event, max_messages=10)
+            if history:
+                lines.append(history[:500])
+            else:
+                lines.append("⚠️ 空")
+
+            yield event.plain_result("\n".join(lines))
+
+        except Exception as e:
+            logger.error(f"[airp_diary] 历史调试失败: {e}", exc_info=True)
+            yield event.plain_result(f"❌ 历史调试失败：{e}")
